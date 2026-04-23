@@ -1,6 +1,7 @@
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '@/lib/LanguageContext';
+import VoiceNavigator from '@/components/VoiceNavigator';
 
 export const metadata = {
   title: 'Swasthya Portal - Rural Telemedicine',
@@ -23,7 +24,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Mobile web app capable — non-deprecated standard */}
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -35,6 +35,7 @@ export default function RootLayout({ children }) {
       <body>
         <LanguageProvider>
           {children}
+          <VoiceNavigator />
           <Toaster
             position="top-right"
             toastOptions={{
