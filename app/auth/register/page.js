@@ -115,7 +115,7 @@ function RegisterForm() {
                 <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', color: '#1a1a2e', marginBottom: 6 }}>{t('speciality')}</label>
                 <select className="input-field" value={speciality} onChange={e => setSpeciality(e.target.value)} required={role === 'doctor'}>
                   <option value="">{t('select_speciality')}</option>
-                  {['General Physician','Cardiologist','Dermatologist','Pediatrician','Gynecologist','Orthopedic','ENT Specialist','Ophthalmologist','Psychiatrist','Neurologist'].map(s => (
+                  {['General Physician', 'Cardiologist', 'Dermatologist', 'Pediatrician', 'Gynecologist', 'Orthopedic', 'ENT Specialist', 'Ophthalmologist', 'Psychiatrist', 'Neurologist'].map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
@@ -151,7 +151,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="rangoli-bg" style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><div className="skeleton" style={{width:400,height:500}} /></div>}>
+    <Suspense fallback={<div className="rangoli-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="skeleton" style={{ width: 400, height: 500 }} /></div>}>
       <RegisterForm />
     </Suspense>
   );

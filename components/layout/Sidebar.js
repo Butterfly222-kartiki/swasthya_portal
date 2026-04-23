@@ -60,7 +60,7 @@ export default function Sidebar({ user, profile }) {
             <div style={{ overflow: 'hidden' }}>
               <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.full_name}</div>
               <div style={{ fontSize: '0.75rem', color: '#f08000', fontWeight: 500 }}>
-                {profile.role === 'doctor' ? `Dr. · ${profile.speciality || 'General'}` : 'Patient'}
+                {profile.role === 'doctor' ? `Dr. · ${profile.speciality || 'General'}` : t('patient')}
               </div>
             </div>
           </div>
