@@ -1,0 +1,24 @@
+{
+  "name": "swasthya-portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.29",
+    "react": "^18",
+    "react-dom": "^18",
+    "@supabase/supabase-js": "^2",
+    "@supabase/ssr": "^0.5",
+    "lucide-react": "^0.400.0",
+    "date-fns": "^3",
+    "react-hot-toast": "^2",
+    "tailwindcss": "^3",
+    "postcss": "^8",
+    "autoprefixer": "^10"
+  }
+}
