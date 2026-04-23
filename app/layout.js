@@ -6,11 +6,6 @@ export const metadata = {
   title: 'Swasthya Portal - Rural Telemedicine',
   description: 'Secure telemedicine platform for rural India. Consult doctors, book appointments, manage records.',
   manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Swasthya Portal',
-  },
   icons: {
     icon: '/favicon.ico',
     apple: '/icon-192.png',
@@ -22,13 +17,14 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  userScalable: true,
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* Mobile web app capable — non-deprecated standard */}
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
