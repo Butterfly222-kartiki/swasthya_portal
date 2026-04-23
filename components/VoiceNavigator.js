@@ -72,8 +72,12 @@ export default function VoiceNavigator() {
   const [feedbackType, setFeedbackType] = useState('info'); // info | success | error
   const [showPanel, setShowPanel] = useState(false);
   const [supported, setSupported] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const recognitionRef = useRef(null);
   const restartRef = useRef(null);
+
+  // Only render client-side to avoid SSR/hydration mismatch
+  useEffect(() => { setMounted(true); }, []);
 
   const showFeedback = useCallback((msg, type = 'info') => {
     setFeedback(msg);
@@ -215,7 +219,7 @@ export default function VoiceNavigator() {
     };
   }, []);
 
-  if (!supported) return null;
+  if (!supported || !mounted) return null;
 
   const langCode = LANG_CODES[language] || 'en-IN';
   const commands = COMMANDS[language] || COMMANDS.en;
