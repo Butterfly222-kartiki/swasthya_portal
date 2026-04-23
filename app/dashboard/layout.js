@@ -1,0 +1,17 @@
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar';
+export default async function DashboardLayout({ children }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar user={user} profile={profile} />
+      <main style={{ flex: 1, marginLeft: 245, minHeight: '100vh', background: 'var(--cream)', padding: '2rem' }}>
+        {children}
+      </main>
+    </div>
+  );
+}
