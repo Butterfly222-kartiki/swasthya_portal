@@ -4,16 +4,18 @@ import { NextResponse } from 'next/server';
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
 
-  // Skip static/public assets immediately
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.match(/\.(?:ico|png|jpg|jpeg|gif|webp|svg|woff2?|ttf|otf|css|js)$/)
-  ) {
-    return NextResponse.next({ request });
+  // Hard skip for ALL static assets — never run auth on these
+  const STATIC_REGEX = /^(?:\/_next\/|\/favicon|\/icon|\/manifest|\/robots|\/sitemap)|\.[a-zA-Z0-9]+$/;
+  if (STATIC_REGEX.test(pathname)) {
+    return NextResponse.next();
   }
 
   let supabaseResponse = NextResponse.next({ request });
+
+  // Guard: if env vars missing, skip auth
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -41,11 +43,12 @@ export async function middleware(request) {
     const { data } = await supabase.auth.getUser();
     user = data?.user ?? null;
   } catch {
-    // Supabase unreachable — treat as unauthenticated
+    // Supabase unreachable — treat as unauthenticated, don't crash
   }
 
-  const publicPaths = ['/', '/auth/login', '/auth/register'];
-  const isPublic = publicPaths.some(p => pathname === p || pathname.startsWith('/auth/'));
+  const isPublic =
+    pathname === '/' ||
+    pathname.startsWith('/auth/');
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
@@ -58,6 +61,7 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon\.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    // Only match page routes — exclude ALL static files, assets, api
+    '/((?!_next/static|_next/image|_next/webpack|favicon\\.ico|icon|manifest\\.json|robots\\.txt|.*\\..*).*)',
   ],
 };

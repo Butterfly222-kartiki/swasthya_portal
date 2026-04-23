@@ -1,24 +1,37 @@
 {
   "name": "Swasthya Portal",
   "short_name": "Swasthya",
-  "description": "Secure telemedicine platform for rural India – consult doctors, book appointments, manage records.",
+  "description": "Secure telemedicine platform for rural India. Consult doctors, book appointments, manage records.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f08000",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "lang": "en",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
