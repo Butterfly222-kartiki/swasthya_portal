@@ -8,8 +8,8 @@ export const metadata = {
   description: 'Secure telemedicine platform for rural India. Consult doctors, book appointments, manage records.',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
     apple: '/icon-192.png',
+    shortcut: '/icon-192.png',
   },
 };
 
