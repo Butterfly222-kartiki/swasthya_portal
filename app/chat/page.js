@@ -6,10 +6,11 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { MessageCircle, Send, Search, Plus, Mic, MicOff, Volume2, Stethoscope, User } from 'lucide-react';
+import ConsultationNotes from '@/components/voice/ConsultationNotes';
 
 export default function ChatPage() {
   const supabase = createClient();
-  const { t } = useLanguage();
+  const { t, language, speak: speakText } = useLanguage();
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -19,8 +20,10 @@ export default function ChatPage() {
   const [searchDr, setSearchDr] = useState('');
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState('list'); // 'list' | 'chat'
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const channelRef = useRef(null);
 
   useEffect(() => { loadProfile(); }, []);
   useEffect(() => { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -45,23 +48,30 @@ export default function ChatPage() {
 
   const openRoom = async (room) => {
     setActiveRoom(room);
+    setMobilePanel('chat');
+    // Unsubscribe from previous room channel to prevent leaks
+    if (channelRef.current) {
+      await supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
     const { data } = await supabase.from('messages').select('*').eq('room_id', room.id).order('created_at', { ascending: true });
     setMessages(data || []);
-    // Subscribe to new messages
+    // Subscribe to new messages for this room
     const channel = supabase.channel(`room-${room.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room.id}` }, payload => {
         setMessages(prev => [...prev, payload.new]);
       }).subscribe();
-    return () => supabase.removeChannel(channel);
+    channelRef.current = channel;
   };
 
   const startChat = async (doctor) => {
     if (!profile) return;
-    // Check if room exists
-    const { data: existing } = await supabase.from('chat_rooms').select('*').eq('patient_id', profile.id).eq('doctor_id', doctor.id).single();
+    // Check if room exists - use maybeSingle() so no error when not found
+    const { data: existing } = await supabase.from('chat_rooms').select('*').eq('patient_id', profile.id).eq('doctor_id', doctor.id).maybeSingle();
     if (existing) { openRoom(existing); return; }
-    const { data: room } = await supabase.from('chat_rooms').insert({ patient_id: profile.id, doctor_id: doctor.id }).select().single();
+    const { data: room, error } = await supabase.from('chat_rooms').insert({ patient_id: profile.id, doctor_id: doctor.id }).select().single();
     if (room) { setRooms(prev => [room, ...prev]); openRoom(room); }
+    if (error) toast.error('Could not start chat. Please try again.');
   };
 
   const sendMessage = async (e) => {
@@ -89,12 +99,14 @@ export default function ChatPage() {
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognitionRef.current = new SR();
-    recognitionRef.current.lang = 'en-IN';
+    const langMap = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN' };
+    recognitionRef.current.lang = langMap[language] || 'en-IN';
     recognitionRef.current.continuous = false;
     recognitionRef.current.interimResults = false;
+    let finalText = '';
     recognitionRef.current.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      setNewMsg(prev => prev + (prev ? ' ' : '') + text);
+      finalText = e.results[0][0].transcript;
+      setNewMsg(prev => prev + (prev ? ' ' : '') + finalText);
     };
     recognitionRef.current.onend = () => setListening(false);
     recognitionRef.current.start();
@@ -103,44 +115,40 @@ export default function ChatPage() {
 
   const stopVoice = () => { recognitionRef.current?.stop(); setListening(false); };
 
-  const speak = (text) => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-IN';
-    window.speechSynthesis.speak(u);
-  };
+  const speak = (text) => speakText(text);
 
   const filteredDoctors = doctors.filter(d => d.full_name?.toLowerCase().includes(searchDr.toLowerCase()) || d.speciality?.toLowerCase().includes(searchDr.toLowerCase()));
 
   return (
-    <div className="animate-fade-in chat-outer" style={{ height: 'calc(100vh - 4rem)', display: 'flex', gap: 16 }}>
+    <div className="animate-fade-in chat-page-wrapper">
       {/* Left: Rooms + Doctors */}
-      <div className="chat-sidebar" style={{ width: 300, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className={`chat-sidebar-panel${mobilePanel === 'chat' ? ' chat-panel-hidden' : ''}`}>
         <div>
-          <h1 style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: '1.3rem', color: '#1a1a2e', marginBottom: 4 }}>{t('chat')}</h1>
-          <p style={{ color: '#4a5568', fontSize: '0.8rem' }}>{t('consult_securely')}</p>
+          <h1 style={{ fontFamily: 'DM Sans', fontWeight: 800, fontSize: '1.3rem', color: '#0f2d2a', marginBottom: 4 }}>{t('chat')}</h1>
+          <p style={{ color: '#3d6b66', fontSize: '0.8rem' }}>Consult your doctors securely</p>
         </div>
 
         {profile?.role === 'patient' && (
           <div className="card" style={{ padding: '1rem' }}>
-            <div style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: '0.875rem', color: '#1a1a2e', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Plus size={14} color="#f08000" /> {t('new_consultation')}
+            <div style={{ fontFamily: 'DM Sans', fontWeight: 700, fontSize: '0.875rem', color: '#0f2d2a', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={14} color="#0d9488" /> Start New Consultation
             </div>
             <div style={{ position: 'relative', marginBottom: 10 }}>
               <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-              <input type="text" value={searchDr} onChange={e => setSearchDr(e.target.value)} placeholder={t('search_doctors')} style={{ width: '100%', padding: '7px 8px 7px 28px', borderRadius: 8, border: '1px solid #f0e8d8', fontSize: '0.8rem', outline: 'none' }} />
+              <input type="text" value={searchDr} onChange={e => setSearchDr(e.target.value)} placeholder="Search doctors..." style={{ width: '100%', padding: '7px 8px 7px 28px', borderRadius: 8, border: '1px solid #ccfbf1', fontSize: '0.8rem', outline: 'none' }} />
             </div>
             <div style={{ maxHeight: 200, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {filteredDoctors.map(doc => (
-                <button key={doc.id} onClick={() => startChat(doc)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, border: '1px solid #f0e8d8', background: 'white', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#fff8f0'}
+                <button key={doc.id} onClick={() => startChat(doc)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, border: '1px solid #ccfbf1', background: 'white', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f0fdfa'}
                   onMouseLeave={e => e.currentTarget.style.background = 'white'}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#0f766e,#0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
                     {doc.full_name?.[0]}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#1a1a2e' }}>Dr. {doc.full_name}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#4a5568' }}>{doc.speciality || 'General'}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.8rem', color: '#0f2d2a' }}>Dr. {doc.full_name}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#3d6b66' }}>{doc.speciality || 'General'}</div>
                   </div>
                 </button>
               ))}
@@ -150,22 +158,22 @@ export default function ChatPage() {
 
         {/* Rooms list */}
         <div className="card" style={{ padding: '1rem', flex: 1, overflow: 'auto' }}>
-          <div style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: '0.875rem', color: '#1a1a2e', marginBottom: 10 }}>{t('conversations')}</div>
+          <div style={{ fontFamily: 'DM Sans', fontWeight: 700, fontSize: '0.875rem', color: '#0f2d2a', marginBottom: 10 }}>Conversations</div>
           {rooms.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem', padding: '1.5rem 0' }}>
               <MessageCircle size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-              <p>{t('no_conversations')}</p>
+              <p>No conversations yet</p>
             </div>
           ) : rooms.map(room => {
             const other = profile?.role === 'patient' ? room.doctor : room.patient;
             const active = activeRoom?.id === room.id;
             return (
-              <button key={room.id} onClick={() => openRoom(room)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', background: active ? '#fff8f0' : 'white', marginBottom: 4, transition: 'all 0.2s', borderLeft: active ? '3px solid #f08000' : '3px solid transparent' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: active ? 'linear-gradient(135deg,#f08000,#c66200)' : 'linear-gradient(135deg,#10b981,#047857)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0 }}>
+              <button key={room.id} onClick={() => openRoom(room)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', background: active ? '#f0fdfa' : 'white', marginBottom: 4, transition: 'all 0.2s', borderLeft: active ? '3px solid #0d9488' : '3px solid transparent' }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: active ? 'linear-gradient(135deg,#0d9488,#0f766e)' : 'linear-gradient(135deg,#10b981,#047857)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0 }}>
                   {other?.full_name?.[0] || '?'}
                 </div>
                 <div style={{ flex: 1, textAlign: 'left', overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.8rem', color: active ? '#f08000' : '#1a1a2e' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.8rem', color: active ? '#0d9488' : '#0f2d2a' }}>
                     {profile?.role === 'patient' ? 'Dr. ' : ''}{other?.full_name || 'Unknown'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -179,34 +187,46 @@ export default function ChatPage() {
       </div>
 
       {/* Right: Chat window */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className={`chat-main-panel${mobilePanel === 'list' ? ' chat-panel-hidden' : ''}`}>
         {activeRoom ? (
           <>
             {/* Chat header */}
-            <div style={{ background: 'white', borderRadius: 16, padding: '1rem 1.5rem', marginBottom: 12, border: '1px solid #f0e8d8', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontFamily: 'Poppins' }}>
+            <div style={{ background: 'white', borderRadius: 16, padding: '1rem 1.5rem', marginBottom: 12, border: '1px solid #ccfbf1', display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Back button on mobile */}
+              <button className="chat-back-btn" onClick={() => setMobilePanel('list')} style={{ display: 'none', width: 34, height: 34, borderRadius: 9, border: '1px solid #ccfbf1', background: '#f0fdfa', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                ‹
+              </button>
+              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#0f766e,#0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontFamily: 'DM Sans' }}>
                 {(profile?.role === 'patient' ? activeRoom.doctor?.full_name : activeRoom.patient?.full_name)?.[0] || 'D'}
               </div>
               <div>
-                <div style={{ fontFamily: 'Poppins', fontWeight: 700, color: '#1a1a2e' }}>
+                <div style={{ fontFamily: 'DM Sans', fontWeight: 700, color: '#0f2d2a' }}>
                   {profile?.role === 'patient' ? 'Dr. ' : ''}{profile?.role === 'patient' ? activeRoom.doctor?.full_name : activeRoom.patient?.full_name}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} /> Online
+                <div style={{ fontSize: '0.75rem', color: '#0d9488', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#0d9488' }} /> Online
                 </div>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                <span style={{ fontSize: '0.75rem', color: '#4a5568', background: '#f5f5f5', padding: '4px 10px', borderRadius: 20 }}>{t('encrypted')}</span>
+                <span style={{ fontSize: '0.75rem', color: '#3d6b66', background: '#f5f5f5', padding: '4px 10px', borderRadius: 20 }}>🔒 End-to-End Secure</span>
               </div>
             </div>
+
+
+            {/* AI Consultation Notes - visible to doctor in realtime */}
+            <ConsultationNotes
+              roomId={activeRoom?.id}
+              isDoctor={profile?.role === 'doctor'}
+              messages={messages}
+            />
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 4px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {messages.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
-                  <MessageCircle size={40} style={{ margin: '0 auto 12px', opacity: 0.3, color: '#f08000' }} />
-                  <p>{t('start_conversation')}</p>
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{t('messages_private')}</p>
+                  <MessageCircle size={40} style={{ margin: '0 auto 12px', opacity: 0.3, color: '#0d9488' }} />
+                  <p>Start the conversation</p>
+                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Your messages are private and secure</p>
                 </div>
               )}
               {messages.map((msg, i) => {
@@ -214,7 +234,7 @@ export default function ChatPage() {
                 return (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                     {!isMe && (
-                      <span style={{ fontSize: '0.7rem', color: '#4a5568', marginBottom: 4, marginLeft: 4 }}>{msg.sender_name}</span>
+                      <span style={{ fontSize: '0.7rem', color: '#3d6b66', marginBottom: 4, marginLeft: 4 }}>{msg.sender_name}</span>
                     )}
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, flexDirection: isMe ? 'row-reverse' : 'row' }}>
                       <div className={isMe ? 'chat-bubble-patient' : 'chat-bubble-doctor'}>
@@ -224,8 +244,8 @@ export default function ChatPage() {
                         </div>
                       </div>
                       {!isMe && (
-                        <button onClick={() => speak(msg.content)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #f0e8d8', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} title="Read aloud">
-                          <Volume2 size={12} color="#4a5568" />
+                        <button onClick={() => speak(msg.content)} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #ccfbf1', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} title="Read aloud">
+                          <Volume2 size={12} color="#3d6b66" />
                         </button>
                       )}
                     </div>
@@ -236,7 +256,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <div style={{ background: 'white', borderRadius: 16, padding: '1rem', border: '1px solid #f0e8d8', marginTop: 12 }}>
+            <div style={{ background: 'white', borderRadius: 16, padding: '1rem', border: '1px solid #ccfbf1', marginTop: 12 }}>
               <form onSubmit={sendMessage} style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                 <textarea
                   value={newMsg}
@@ -244,16 +264,16 @@ export default function ChatPage() {
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                   placeholder={t('type_message')}
                   rows={2}
-                  style={{ flex: 1, border: '2px solid #f0e8d8', borderRadius: 12, padding: '10px 14px', fontSize: '0.9rem', outline: 'none', resize: 'none', fontFamily: 'Noto Sans, sans-serif' }}
-                  onFocus={e => e.target.style.borderColor = '#f08000'}
-                  onBlur={e => e.target.style.borderColor = '#f0e8d8'}
+                  style={{ flex: 1, border: '2px solid #ccfbf1', borderRadius: 12, padding: '10px 14px', fontSize: '0.9rem', outline: 'none', resize: 'none', fontFamily: 'Noto Sans, sans-serif' }}
+                  onFocus={e => e.target.style.borderColor = '#0d9488'}
+                  onBlur={e => e.target.style.borderColor = '#ccfbf1'}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <button type="button" onClick={listening ? stopVoice : startVoice}
-                    style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer', background: listening ? '#ef4444' : '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                    style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer', background: listening ? '#059669' : '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                     title="Voice input"
                   >
-                    {listening ? <MicOff size={16} color="white" /> : <Mic size={16} color="#4a5568" />}
+                    {listening ? <MicOff size={16} color="white" /> : <Mic size={16} color="#3d6b66" />}
                   </button>
                   <button type="submit" disabled={!newMsg.trim()} className="btn-primary" style={{ width: 40, height: 40, padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: newMsg.trim() ? 1 : 0.5 }}>
                     <Send size={16} />
@@ -261,9 +281,9 @@ export default function ChatPage() {
                 </div>
               </form>
               {listening && (
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: '0.75rem' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulseSoft 1s infinite' }} />
-                  {t('listening')}
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: '0.75rem' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669', animation: 'pulseSoft 1s infinite' }} />
+                  Listening… speak now
                 </div>
               )}
             </div>
@@ -271,21 +291,13 @@ export default function ChatPage() {
         ) : (
           <div className="card" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center', color: '#9ca3af' }}>
-              <MessageCircle size={56} style={{ margin: '0 auto 16px', opacity: 0.2, color: '#f08000' }} />
-              <p style={{ fontFamily: 'Poppins', fontWeight: 600, color: '#4a5568' }}>{t('select_conversation')}</p>
-              <p style={{ fontSize: '0.8rem', marginTop: 4 }}>{t('or_start_new')}</p>
+              <MessageCircle size={56} style={{ margin: '0 auto 16px', opacity: 0.2, color: '#0d9488' }} />
+              <p style={{ fontFamily: 'DM Sans', fontWeight: 600, color: '#3d6b66' }}>Select a conversation</p>
+              <p style={{ fontSize: '0.8rem', marginTop: 4 }}>or start a new consultation with a doctor</p>
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .chat-outer { flex-direction: column; height: auto !important; }
-          .chat-sidebar { width: 100% !important; flex-direction: row; overflow-x: auto; gap: 10px; }
-          .chat-sidebar > div { min-width: 260px; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,37 +1,50 @@
 {
-  "name": "Swasthya Portal",
+  "name": "Swasthya Portal – Rural Telemedicine",
   "short_name": "Swasthya",
-  "description": "Secure telemedicine platform for rural India. Consult doctors, book appointments, manage records.",
+  "description": "AI-powered telemedicine for rural India",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f08000",
-  "orientation": "portrait-primary",
-  "lang": "en",
+  "orientation": "portrait",
+  "background_color": "#f0fdfa",
+  "theme_color": "#0d9488",
+  "categories": ["health", "medical"],
+  "lang": "en-IN",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book Appointment",
+      "short_name": "Appointments",
+      "description": "Book a doctor appointment",
+      "url": "/appointments",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "Chat with Doctor",
+      "short_name": "Chat",
+      "description": "Message your doctor",
+      "url": "/chat",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

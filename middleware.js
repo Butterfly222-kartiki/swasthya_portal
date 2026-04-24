@@ -2,21 +2,16 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request) {
-  const pathname = request.nextUrl.pathname;
-
   let supabaseResponse = NextResponse.next({ request });
-
-  // Guard: if env vars missing, skip auth entirely
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return supabaseResponse;
-  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() { return request.cookies.getAll(); },
+        getAll() {
+          return request.cookies.getAll();
+        },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
             request.cookies.set(name, value, options)
@@ -30,15 +25,12 @@ export async function middleware(request) {
     }
   );
 
-  let user = null;
-  try {
-    const { data } = await supabase.auth.getUser();
-    user = data?.user ?? null;
-  } catch {
-    // Supabase unreachable — treat as unauthenticated
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const isPublic = pathname === '/' || pathname.startsWith('/auth/');
+  const pathname = request.nextUrl.pathname;
+
+  const publicPaths = ['/', '/auth/login', '/auth/register'];
+  const isPublic = publicPaths.some(p => pathname === p || pathname.startsWith('/auth/'));
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
@@ -49,14 +41,8 @@ export async function middleware(request) {
   return supabaseResponse;
 }
 
-// WHITELIST only protected app routes — never touch static files
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/appointments/:path*',
-    '/chat/:path*',
-    '/documents/:path*',
-    '/pharmacy/:path*',
-    '/profile/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

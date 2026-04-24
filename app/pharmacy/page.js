@@ -50,7 +50,7 @@ export default function PharmacyPage() {
 
     // User location marker
     const userIcon = L.divIcon({
-      html: `<div style="width:14px;height:14px;border-radius:50%;background:#4f46e5;border:3px solid white;box-shadow:0 2px 8px rgba(79,70,229,0.5)"></div>`,
+      html: `<div style="width:14px;height:14px;border-radius:50%;background:#0f766e;border:3px solid white;box-shadow:0 2px 8px rgba(13,148,136,0.5)"></div>`,
       className: '',
       iconAnchor: [7, 7],
     });
@@ -70,7 +70,7 @@ export default function PharmacyPage() {
     places.forEach(place => {
       const isPharmacy = activeTab === 'pharmacy';
       const icon = L.divIcon({
-        html: `<div style="width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${isPharmacy ? '#f08000' : '#10b981'};border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">
+        html: `<div style="width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${isPharmacy ? '#0d9488' : '#0d9488'};border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">
           <span style="transform:rotate(45deg);font-size:13px">${isPharmacy ? '💊' : '🏥'}</span>
         </div>`,
         className: '',
@@ -80,11 +80,11 @@ export default function PharmacyPage() {
       const marker = L.marker([place.lat, place.lng], { icon })
         .addTo(leafletMapRef.current)
         .bindPopup(`
-          <div style="font-family:Poppins,sans-serif;min-width:180px;padding:4px 0">
-            <b style="color:#1a1a2e;font-size:0.875rem;display:block;margin-bottom:4px">${place.name}</b>
-            ${place.address ? `<span style="color:#4a5568;font-size:0.75rem;display:block;margin-bottom:4px">${place.address}</span>` : ''}
-            ${place.phone ? `<span style="color:#f08000;font-size:0.75rem;display:block;margin-bottom:4px">📞 ${place.phone}</span>` : ''}
-            <a href="https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}&zoom=17" target="_blank" style="color:#4f46e5;font-size:0.75rem;text-decoration:none">🗺️ Open in Maps</a>
+          <div style="font-family:DM Sans,sans-serif;min-width:180px;padding:4px 0">
+            <b style="color:#134e4a;font-size:0.875rem;display:block;margin-bottom:4px">${place.name}</b>
+            ${place.address ? `<span style="color:#3d6b66;font-size:0.75rem;display:block;margin-bottom:4px">${place.address}</span>` : ''}
+            ${place.phone ? `<span style="color:#0d9488;font-size:0.75rem;display:block;margin-bottom:4px">📞 ${place.phone}</span>` : ''}
+            <a href="https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}&zoom=17" target="_blank" style="color:#0f766e;font-size:0.75rem;text-decoration:none">🗺️ Open in Maps</a>
           </div>
         `);
       markersRef.current.push(marker);
@@ -176,8 +176,8 @@ export default function PharmacyPage() {
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: 'clamp(1.2rem,3vw,1.5rem)', color: '#1a1a2e' }}>{t('pharmacy')}</h1>
-        <p style={{ color: '#4a5568', fontSize: '0.875rem', marginTop: 4 }}>{t('find_pharmacy')}</p>
+        <h1 style={{ fontFamily: 'DM Sans', fontWeight: 800, fontSize: '1.5rem', color: '#0f2d2a' }}>{t('pharmacy')}</h1>
+        <p style={{ color: '#3d6b66', fontSize: '0.875rem', marginTop: 4 }}>Find pharmacies and clinics near you</p>
       </div>
 
       {/* Free badge */}
@@ -191,10 +191,10 @@ export default function PharmacyPage() {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, background: '#f5f5f5', borderRadius: 12, padding: 4, width: 'fit-content', marginBottom: 20 }}>
         {[
-          { key: 'pharmacy', label: t('pharmacies') },
-          { key: 'clinic', label: t('clinics') },
+          { key: 'pharmacy', label: '💊 Pharmacies' },
+          { key: 'clinic', label: '🏥 Clinics & Hospitals' },
         ].map(tab => (
-          <button key={tab.key} onClick={() => switchTab(tab.key)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', background: activeTab === tab.key ? 'white' : 'transparent', color: activeTab === tab.key ? '#f08000' : '#4a5568', boxShadow: activeTab === tab.key ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+          <button key={tab.key} onClick={() => switchTab(tab.key)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', fontFamily: 'DM Sans', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', background: activeTab === tab.key ? 'white' : 'transparent', color: activeTab === tab.key ? '#0d9488' : '#3d6b66', boxShadow: activeTab === tab.key ? '0 2px 8px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
             {tab.label}
           </button>
         ))}
@@ -202,32 +202,32 @@ export default function PharmacyPage() {
 
       {!location ? (
         <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#fff8f0,#ffd9a0)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <MapPin size={36} color="#f08000" />
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#f0fdfa,#99f6e4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <MapPin size={36} color="#0d9488" />
           </div>
-          <h3 style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: '1.2rem', color: '#1a1a2e', marginBottom: 8 }}>
-            {t('find_nearby')} {activeTab === 'pharmacy' ? t('pharmacies') : t('clinics')}
+          <h3 style={{ fontFamily: 'DM Sans', fontWeight: 700, fontSize: '1.2rem', color: '#0f2d2a', marginBottom: 8 }}>
+            Find Nearby {activeTab === 'pharmacy' ? 'Pharmacies' : 'Clinics'}
           </h3>
-          <p style={{ color: '#4a5568', fontSize: '0.875rem', marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>
-            {t('allow_location')}
+          <p style={{ color: '#3d6b66', fontSize: '0.875rem', marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>
+            Allow location access to see places near you on an interactive map.
           </p>
           <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: 24 }}>
             Powered by OpenStreetMap & Overpass API — completely free, no credit card needed.
           </p>
           <button onClick={getLocation} disabled={loading} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, opacity: loading ? 0.7 : 1 }}>
             {loading ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Navigation size={16} />}
-            {loading ? t('getting_location') : t('find_pharmacy')}
+            {loading ? 'Getting location...' : t('find_pharmacy')}
           </button>
           {error && (
-            <p style={{ color: '#f08000', fontSize: '0.8rem', marginTop: 12, background: '#fff8f0', padding: '8px 16px', borderRadius: 8, display: 'inline-block' }}>
+            <p style={{ color: '#0d9488', fontSize: '0.8rem', marginTop: 12, background: '#f0fdfa', padding: '8px 16px', borderRadius: 8, display: 'inline-block' }}>
               ⚠️ {error}
             </p>
           )}
         </div>
       ) : (
-        <div className="pharmacy-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, height: 'calc(100vh - 280px)', minHeight: 480 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, height: 'calc(100vh - 280px)', minHeight: 480 }}>
           {/* Map */}
-          <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid #f0e8d8', position: 'relative' }}>
+          <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid #ccfbf1', position: 'relative' }}>
             <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
             {/* Refresh button on map */}
@@ -235,18 +235,18 @@ export default function PharmacyPage() {
               <button
                 onClick={() => fetchNearby(location, activeTab)}
                 disabled={loading}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.15)', cursor: 'pointer', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', color: '#1a1a2e' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.15)', cursor: 'pointer', fontFamily: 'DM Sans', fontWeight: 600, fontSize: '0.8rem', color: '#0f2d2a' }}
               >
-                <RefreshCw size={13} color={loading ? '#f08000' : '#4a5568'} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-                {t('refresh')}
+                <RefreshCw size={13} color={loading ? '#0d9488' : '#3d6b66'} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                Refresh
               </button>
             </div>
 
             {loading && (
               <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
                 <div style={{ textAlign: 'center', background: 'white', padding: '1.5rem 2rem', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-                  <Loader size={28} color="#f08000" style={{ animation: 'spin 1s linear infinite', display: 'block', margin: '0 auto 10px' }} />
-                  <p style={{ fontFamily: 'Poppins', fontWeight: 600, color: '#1a1a2e', fontSize: '0.875rem' }}>{t('fetching_places')}</p>
+                  <Loader size={28} color="#0d9488" style={{ animation: 'spin 1s linear infinite', display: 'block', margin: '0 auto 10px' }} />
+                  <p style={{ fontFamily: 'DM Sans', fontWeight: 600, color: '#0f2d2a', fontSize: '0.875rem' }}>Fetching nearby places...</p>
                   <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 4 }}>via Overpass API (free)</p>
                 </div>
               </div>
@@ -262,16 +262,16 @@ export default function PharmacyPage() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={`${t('search')} ${places.length} ${t('found')}...`}
-                style={{ width: '100%', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #f0e8d8', fontSize: '0.85rem', outline: 'none', background: 'white' }}
+                placeholder={`Search ${places.length} results...`}
+                style={{ width: '100%', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid #ccfbf1', fontSize: '0.85rem', outline: 'none', background: 'white' }}
               />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', color: '#4a5568', fontWeight: 600 }}>
-                {loading ? t('searching') : `${filtered.length} ${t('found')}`}
+              <span style={{ fontSize: '0.8rem', color: '#3d6b66', fontWeight: 600 }}>
+                {loading ? 'Searching…' : `${filtered.length} found`}
               </span>
-              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{t('within_3km')}</span>
+              <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>within 3 km</span>
             </div>
 
             {/* List */}
@@ -283,9 +283,9 @@ export default function PharmacyPage() {
               ) : filtered.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#9ca3af' }}>
                   <MapPin size={32} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
-                  <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('no_results')}</p>
-                  <p style={{ fontSize: '0.75rem', marginTop: 4 }}>{t('try_refresh')}</p>
-                  <button onClick={() => fetchNearby(location, activeTab)} className="btn-outline" style={{ marginTop: 12, padding: '6px 16px', fontSize: '0.8rem' }}>{t('refresh')}</button>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>No results found</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: 4 }}>Try refreshing or check your area</p>
+                  <button onClick={() => fetchNearby(location, activeTab)} className="btn-outline" style={{ marginTop: 12, padding: '6px 16px', fontSize: '0.8rem' }}>Refresh</button>
                 </div>
               ) : filtered.map((place, i) => (
                 <div
@@ -293,36 +293,36 @@ export default function PharmacyPage() {
                   onClick={() => focusPlace(place)}
                   style={{
                     background: 'white',
-                    border: `2px solid ${selectedPlace?.id === place.id ? '#f08000' : '#f0e8d8'}`,
+                    border: `2px solid ${selectedPlace?.id === place.id ? '#0d9488' : '#ccfbf1'}`,
                     borderRadius: 14, padding: '12px', cursor: 'pointer',
                     transition: 'all 0.2s',
-                    boxShadow: selectedPlace?.id === place.id ? '0 4px 16px rgba(240,128,0,0.15)' : 'none',
+                    boxShadow: selectedPlace?.id === place.id ? '0 4px 16px rgba(13,148,136,0.15)' : 'none',
                   }}
-                  onMouseEnter={e => { if (selectedPlace?.id !== place.id) e.currentTarget.style.borderColor = '#ffd9a0'; }}
-                  onMouseLeave={e => { if (selectedPlace?.id !== place.id) e.currentTarget.style.borderColor = '#f0e8d8'; }}
+                  onMouseEnter={e => { if (selectedPlace?.id !== place.id) e.currentTarget.style.borderColor = '#99f6e4'; }}
+                  onMouseLeave={e => { if (selectedPlace?.id !== place.id) e.currentTarget.style.borderColor = '#ccfbf1'; }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: 7, background: activeTab === 'pharmacy' ? '#fff8f0' : '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem' }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 7, background: activeTab === 'pharmacy' ? '#f0fdfa' : '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem' }}>
                           {activeTab === 'pharmacy' ? '💊' : '🏥'}
                         </div>
-                        <span style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: '0.82rem', color: '#1a1a2e', lineHeight: 1.3 }}>{place.name}</span>
+                        <span style={{ fontFamily: 'DM Sans', fontWeight: 700, fontSize: '0.82rem', color: '#0f2d2a', lineHeight: 1.3 }}>{place.name}</span>
                       </div>
 
                       {place.address && (
-                        <div style={{ display: 'flex', gap: 4, color: '#4a5568', fontSize: '0.72rem', marginBottom: 3 }}>
+                        <div style={{ display: 'flex', gap: 4, color: '#3d6b66', fontSize: '0.72rem', marginBottom: 3 }}>
                           <MapPin size={10} style={{ flexShrink: 0, marginTop: 1 }} />
                           <span>{place.address}</span>
                         </div>
                       )}
 
                       {place.phone && (
-                        <div style={{ fontSize: '0.72rem', color: '#f08000', fontWeight: 600 }}>📞 {place.phone}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#0d9488', fontWeight: 600 }}>📞 {place.phone}</div>
                       )}
 
                       {place.opening_hours && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', color: '#4a5568', marginTop: 3 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', color: '#3d6b66', marginTop: 3 }}>
                           <Clock size={9} />
                           {place.opening_hours.length > 28 ? place.opening_hours.slice(0, 28) + '…' : place.opening_hours}
                         </div>
@@ -332,9 +332,9 @@ export default function PharmacyPage() {
                     <button
                       onClick={e => { e.stopPropagation(); window.open(`https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}&zoom=17`, '_blank'); }}
                       title="Open in OpenStreetMap"
-                      style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid #f0e8d8', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                      style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid #ccfbf1', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      <ExternalLink size={12} color="#4a5568" />
+                      <ExternalLink size={12} color="#3d6b66" />
                     </button>
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export default function PharmacyPage() {
 
             {/* Attribution */}
             <div style={{ fontSize: '0.68rem', color: '#9ca3af', textAlign: 'center', paddingTop: 4 }}>
-              Map © <a href="https://openstreetmap.org" target="_blank" rel="noreferrer" style={{ color: '#4f46e5' }}>OpenStreetMap</a> · Data via <a href="https://overpass-api.de" target="_blank" rel="noreferrer" style={{ color: '#4f46e5' }}>Overpass API</a>
+              Map © <a href="https://openstreetmap.org" target="_blank" rel="noreferrer" style={{ color: '#0f766e' }}>OpenStreetMap</a> · Data via <a href="https://overpass-api.de" target="_blank" rel="noreferrer" style={{ color: '#0f766e' }}>Overpass API</a>
             </div>
           </div>
         </div>
@@ -354,7 +354,7 @@ export default function PharmacyPage() {
         .leaflet-popup-content-wrapper { border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important; }
         .leaflet-popup-content { margin: 12px 14px !important; }
         @media (max-width: 900px) {
-          .pharmacy-grid { grid-template-columns: 1fr !important; height: auto !important; }
+          .map-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

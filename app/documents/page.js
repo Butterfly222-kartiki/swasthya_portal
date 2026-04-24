@@ -10,9 +10,9 @@ import { FileText, Upload, Download, Eye, Trash2, Search, Filter, File, FileImag
 const DOC_TYPES = ['All', 'Lab Report', 'Prescription', 'X-Ray / Scan', 'Discharge Summary', 'Insurance', 'Other'];
 
 function getFileIcon(type) {
-  if (type?.includes('image')) return <FileImage size={20} color="#4f46e5" />;
+  if (type?.includes('image')) return <FileImage size={20} color="#0f766e" />;
   if (type?.includes('pdf')) return <FileText size={20} color="#ef4444" />;
-  return <File size={20} color="#f08000" />;
+  return <File size={20} color="#0d9488" />;
 }
 
 function formatBytes(bytes) {
@@ -100,15 +100,15 @@ export default function DocumentsPage() {
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: 'clamp(1.2rem,3vw,1.5rem)', color: '#1a1a2e' }}>{t('medical_records_title')}</h1>
-        <p style={{ color: '#4a5568', fontSize: '0.875rem', marginTop: 4 }}>{t('upload_document')} — {t('medical_records')}</p>
+        <h1 style={{ fontFamily: 'DM Sans', fontWeight: 800, fontSize: '1.5rem', color: '#0f2d2a' }}>{t('medical_records')}</h1>
+        <p style={{ color: '#3d6b66', fontSize: '0.875rem', marginTop: 4 }}>Upload and manage your health documents securely</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24, marginBottom: 28 }}>
         {/* Upload card */}
         <div className="card">
-          <h3 style={{ fontFamily: 'Poppins', fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FilePlus size={18} color="#f08000" /> {t('upload_document')}
+          <h3 style={{ fontFamily: 'DM Sans', fontWeight: 700, color: '#0f2d2a', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FilePlus size={18} color="#0d9488" /> {t('upload_document')}
           </h3>
 
           <div
@@ -119,15 +119,15 @@ export default function DocumentsPage() {
             onClick={() => fileRef.current?.click()}
             style={{ marginBottom: 16 }}
           >
-            <Upload size={32} style={{ margin: '0 auto 10px', color: drag ? '#f08000' : '#9ca3af', display: 'block' }} />
+            <Upload size={32} style={{ margin: '0 auto 10px', color: drag ? '#0d9488' : '#9ca3af', display: 'block' }} />
             {selectedFile ? (
               <div>
-                <p style={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.9rem' }}>{selectedFile.name}</p>
-                <p style={{ color: '#4a5568', fontSize: '0.8rem', marginTop: 4 }}>{formatBytes(selectedFile.size)}</p>
+                <p style={{ fontWeight: 600, color: '#0f2d2a', fontSize: '0.9rem' }}>{selectedFile.name}</p>
+                <p style={{ color: '#3d6b66', fontSize: '0.8rem', marginTop: 4 }}>{formatBytes(selectedFile.size)}</p>
               </div>
             ) : (
               <div>
-                <p style={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.9rem' }}>Drop files here or click to browse</p>
+                <p style={{ fontWeight: 600, color: '#0f2d2a', fontSize: '0.9rem' }}>Drop files here or click to browse</p>
                 <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: 4 }}>PDF, JPG, PNG up to 10MB</p>
               </div>
             )}
@@ -136,17 +136,17 @@ export default function DocumentsPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', color: '#1a1a2e', marginBottom: 5 }}>{t('doc_name')}</label>
-              <input className="input-field" value={docName} onChange={e => setDocName(e.target.value)} placeholder="e.g. Blood Test Report" />
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', color: '#0f2d2a', marginBottom: 5 }}>Document Name</label>
+              <input className="input-field" value={docName} onChange={e => setDocName(e.target.value)} placeholder="e.g. Blood Test Report Jan 2025" />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', color: '#1a1a2e', marginBottom: 5 }}>{t('doc_type')}</label>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', color: '#0f2d2a', marginBottom: 5 }}>Document Type</label>
               <select className="input-field" value={docType} onChange={e => setDocType(e.target.value)}>
                 {DOC_TYPES.filter(t => t !== 'All').map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
             <button onClick={handleUpload} disabled={uploading || !selectedFile} className="btn-primary" style={{ opacity: uploading || !selectedFile ? 0.6 : 1 }}>
-              {uploading ? t('uploading') : t('upload_btn')}
+              {uploading ? 'Uploading...' : 'Upload Document'}
             </button>
           </div>
         </div>
@@ -154,14 +154,14 @@ export default function DocumentsPage() {
         {/* Stats */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[
-            { label: t('total_docs'), value: docs.length, color: '#f08000' },
-            { label: t('lab_reports'), value: docs.filter(d => d.doc_type === 'Lab Report').length, color: '#10b981' },
-            { label: t('prescriptions_label'), value: docs.filter(d => d.doc_type === 'Prescription').length, color: '#4f46e5' },
-            { label: t('scans'), value: docs.filter(d => d.doc_type === 'X-Ray / Scan').length, color: '#f59e0b' },
+            { label: 'Total Documents', value: docs.length, color: '#0d9488' },
+            { label: 'Lab Reports', value: docs.filter(d => d.doc_type === 'Lab Report').length, color: '#0d9488' },
+            { label: 'Prescriptions', value: docs.filter(d => d.doc_type === 'Prescription').length, color: '#0f766e' },
+            { label: 'Scans & X-Rays', value: docs.filter(d => d.doc_type === 'X-Ray / Scan').length, color: '#f59e0b' },
           ].map((s, i) => (
-            <div key={i} style={{ background: 'white', border: '1px solid #f0e8d8', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ color: '#4a5568', fontSize: '0.875rem' }}>{s.label}</span>
-              <span style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: '1.5rem', color: s.color }}>{s.value}</span>
+            <div key={i} style={{ background: 'white', border: '1px solid #ccfbf1', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ color: '#3d6b66', fontSize: '0.875rem' }}>{s.label}</span>
+              <span style={{ fontFamily: 'DM Sans', fontWeight: 800, fontSize: '1.5rem', color: s.color }}>{s.value}</span>
             </div>
           ))}
         </div>
@@ -171,11 +171,11 @@ export default function DocumentsPage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search_docs')} style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 10, border: '1px solid #f0e8d8', fontSize: '0.875rem', outline: 'none' }} />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search documents..." style={{ width: '100%', padding: '9px 12px 9px 36px', borderRadius: 10, border: '1px solid #ccfbf1', fontSize: '0.875rem', outline: 'none' }} />
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {DOC_TYPES.map(type => (
-            <button key={type} onClick={() => setFilter(type)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${filter === type ? '#f08000' : '#f0e8d8'}`, background: filter === type ? '#f08000' : 'white', color: filter === type ? 'white' : '#4a5568', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}>
+            <button key={type} onClick={() => setFilter(type)} style={{ padding: '6px 14px', borderRadius: 20, border: `2px solid ${filter === type ? '#0d9488' : '#ccfbf1'}`, background: filter === type ? '#0d9488' : 'white', color: filter === type ? 'white' : '#3d6b66', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.2s' }}>
               {type}
             </button>
           ))}
@@ -185,9 +185,9 @@ export default function DocumentsPage() {
       {/* Documents grid */}
       {filtered.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <FileText size={48} style={{ margin: '0 auto 12px', opacity: 0.2, color: '#f08000' }} />
-          <p style={{ color: '#4a5568' }}>{t('no_docs')}</p>
-          <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: 4 }}>{t('upload_first')}</p>
+          <FileText size={48} style={{ margin: '0 auto 12px', opacity: 0.2, color: '#0d9488' }} />
+          <p style={{ color: '#3d6b66' }}>No documents found</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: 4 }}>Upload your first medical document</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -198,9 +198,9 @@ export default function DocumentsPage() {
                   {getFileIcon(doc.file_mime)}
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0f2d2a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                    <span style={{ fontSize: '0.7rem', background: '#fff8f0', color: '#f08000', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>{doc.doc_type}</span>
+                    <span style={{ fontSize: '0.7rem', background: '#f0fdfa', color: '#0d9488', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>{doc.doc_type}</span>
                     <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{formatBytes(doc.file_size)}</span>
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: 4 }}>{doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : '—'}</div>
@@ -208,16 +208,16 @@ export default function DocumentsPage() {
               </div>
               <div className="mandala-divider" style={{ margin: '12px 0' }} />
               <div style={{ display: 'flex', gap: 8 }}>
-                <a href={doc.file_url} target="_blank" rel="noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, background: '#f5f5f5', color: '#4a5568', fontWeight: 600, fontSize: '0.75rem', textDecoration: 'none', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#f5f5f5'; e.currentTarget.style.color = '#4a5568'; }}
+                <a href={doc.file_url} target="_blank" rel="noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, background: '#f5f5f5', color: '#3d6b66', fontWeight: 600, fontSize: '0.75rem', textDecoration: 'none', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#f0fdfa'; e.currentTarget.style.color = '#0f766e'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#f5f5f5'; e.currentTarget.style.color = '#3d6b66'; }}
                 >
-                  <Eye size={13} /> {t('view')}
+                  <Eye size={13} /> View
                 </a>
-                <a href={doc.file_url} download style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, background: '#ecfdf5', color: '#10b981', fontWeight: 600, fontSize: '0.75rem', textDecoration: 'none' }}>
-                  <Download size={13} /> {t('download')}
+                <a href={doc.file_url} download style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px', borderRadius: 8, background: '#ecfdf5', color: '#0d9488', fontWeight: 600, fontSize: '0.75rem', textDecoration: 'none' }}>
+                  <Download size={13} /> Download
                 </a>
-                <button onClick={() => handleDelete(doc)} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button onClick={() => handleDelete(doc)} style={{ width: 34, height: 34, borderRadius: 8, border: 'none', background: '#ecfdf5', color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={13} />
                 </button>
               </div>
