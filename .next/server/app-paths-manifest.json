@@ -1,8 +1,8 @@
 {
-  "/api/consultation-notes/route": "app/api/consultation-notes/route.js",
-  "/doctor/patients/page": "app/doctor/patients/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/chat/page": "app/chat/page.js",
-  "/video/page": "app/video/page.js",
-  "/doctor/availability/page": "app/doctor/availability/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/admin/doctors/page": "app/admin/doctors/page.js",
+  "/admin/page": "app/admin/page.js"
 }

@@ -1,4 +1,4 @@
-// File: C:\Users\Sujal\Downloads\swasthya-portal-v6\swasthya-v6\app\doctor\availability\page.js
+// File: C:\Users\Sujal\Documents\GitHub\swasthya_portal\app\doctor\availability\page.js
 import * as entry from '../../../../../app/doctor/availability/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -38,6 +38,7 @@ export default function ProfilePage() {
     const { error } = await supabase.from('profiles').update({
       full_name: profile.full_name,
       phone: profile.phone,
+      city: profile.city,
       age: profile.age,
       gender: profile.gender,
       blood_group: profile.blood_group,
@@ -112,6 +113,7 @@ export default function ProfilePage() {
               {[
                 { label: 'Full Name', key: 'full_name', type: 'text' },
                 { label: 'Phone', key: 'phone', type: 'tel' },
+                { label: 'City', key: 'city', type: 'text' },
                 { label: 'Age', key: 'age', type: 'number' },
                 { label: 'Address', key: 'address', type: 'text' },
                 { label: 'Emergency Contact', key: 'emergency_contact', type: 'tel' },

@@ -10,7 +10,7 @@ import ConsultationNotes from '@/components/voice/ConsultationNotes';
 
 export default function ChatPage() {
   const supabase = createClient();
-  const { t } = useLanguage();
+  const { t, language, speak: speakText } = useLanguage();
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [listening, setListening] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const channelRef = useRef(null);
 
   useEffect(() => { loadProfile(); }, []);
   useEffect(() => { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -46,14 +47,19 @@ export default function ChatPage() {
 
   const openRoom = async (room) => {
     setActiveRoom(room);
+    // Unsubscribe from previous room channel to prevent leaks
+    if (channelRef.current) {
+      await supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
     const { data } = await supabase.from('messages').select('*').eq('room_id', room.id).order('created_at', { ascending: true });
     setMessages(data || []);
-    // Subscribe to new messages
+    // Subscribe to new messages for this room
     const channel = supabase.channel(`room-${room.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room.id}` }, payload => {
         setMessages(prev => [...prev, payload.new]);
       }).subscribe();
-    return () => supabase.removeChannel(channel);
+    channelRef.current = channel;
   };
 
   const startChat = async (doctor) => {
@@ -90,12 +96,14 @@ export default function ChatPage() {
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognitionRef.current = new SR();
-    recognitionRef.current.lang = 'en-IN';
+    const langMap = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN' };
+    recognitionRef.current.lang = langMap[language] || 'en-IN';
     recognitionRef.current.continuous = false;
     recognitionRef.current.interimResults = false;
+    let finalText = '';
     recognitionRef.current.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      setNewMsg(prev => prev + (prev ? ' ' : '') + text);
+      finalText = e.results[0][0].transcript;
+      setNewMsg(prev => prev + (prev ? ' ' : '') + finalText);
     };
     recognitionRef.current.onend = () => setListening(false);
     recognitionRef.current.start();
@@ -104,11 +112,7 @@ export default function ChatPage() {
 
   const stopVoice = () => { recognitionRef.current?.stop(); setListening(false); };
 
-  const speak = (text) => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-IN';
-    window.speechSynthesis.speak(u);
-  };
+  const speak = (text) => speakText(text);
 
   const filteredDoctors = doctors.filter(d => d.full_name?.toLowerCase().includes(searchDr.toLowerCase()) || d.speciality?.toLowerCase().includes(searchDr.toLowerCase()));
 

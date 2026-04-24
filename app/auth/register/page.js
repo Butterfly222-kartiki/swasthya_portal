@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, Suspense } from 'react';
+import { useState, useRef, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -10,6 +10,45 @@ import toast from 'react-hot-toast';
 import { HeartPulse, Mail, Lock, User, Eye, EyeOff, Stethoscope, Globe, Upload, FileText, Volume2, Mic, MicOff, CheckCircle } from 'lucide-react';
 
 const SPECIALITIES = ['General Physician','Cardiologist','Dermatologist','Pediatrician','Gynecologist','Orthopedic','ENT Specialist','Ophthalmologist','Psychiatrist','Neurologist','Diabetologist','Pulmonologist'];
+
+// Move InputRow outside component to prevent recreation
+const InputRow = ({ label, fieldKey, type = 'text', placeholder, required = false, showVoice = true, value, onChange, onVoiceClick, listening }) => (
+  <div>
+    <label style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: '#1a1a2e', marginBottom: 5 }}>{label}{required && ' *'}</label>
+    <div style={{ position: 'relative' }}>
+      <input 
+        className="input-field" 
+        type={type} 
+        value={value} 
+        onChange={onChange} 
+        placeholder={placeholder} 
+        required={required} 
+        style={{ paddingRight: showVoice ? 40 : 14 }} 
+      />
+      {showVoice && (
+        <button 
+          type="button" 
+          onClick={onVoiceClick}
+          style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 26, height: 26, borderRadius: '50%', border: 'none', background: listening ? '#fef3c7' : '#f5f5f5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {listening ? <MicOff size={12} color="#f08000" /> : <Mic size={12} color="#4a5568" />}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+const FileUpload = ({ label, file, setFile, accept = '.pdf,.jpg,.jpeg,.png', required = false }) => (
+  <div>
+    <label style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: '#1a1a2e', marginBottom: 5 }}>{label}{required && ' *'}</label>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: `2px dashed ${file ? '#10b981' : '#f0e8d8'}`, borderRadius: 10, cursor: 'pointer', background: file ? '#ecfdf5' : '#fafafa', transition: 'all 0.2s' }}>
+      <input type="file" accept={accept} hidden onChange={e => setFile(e.target.files[0])} required={required} />
+      {file ? <CheckCircle size={16} color="#10b981" /> : <Upload size={16} color="#9ca3af" />}
+      <span style={{ fontSize: '0.8rem', color: file ? '#065f46' : '#4a5568' }}>
+        {file ? file.name : `Upload ${label} (PDF/JPG/PNG)`}
+      </span>
+    </label>
+  </div>
+);
 
 function RegisterForm() {
   const { t, language, changeLanguage } = useLanguage();
@@ -28,7 +67,7 @@ function RegisterForm() {
   // Form fields
   const [form, setForm] = useState({
     name: '', email: '', phone: '', password: '',
-    age: '', gender: '', blood_group: '',
+    age: '', gender: '', blood_group: '', city: '',
     speciality: '', license_number: '', years_experience: '',
     address: '', emergency_contact: '',
   });
@@ -39,6 +78,14 @@ function RegisterForm() {
   const [photoFile, setPhotoFile] = useState(null);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+
+  const handleInputChange = useCallback((fieldKey) => (e) => {
+    set(fieldKey, e.target.value);
+  }, []);
+
+  const handleVoiceClick = useCallback((fieldKey, label) => () => {
+    startVoice(fieldKey, `Say your ${label}`);
+  }, []);
 
   const speak = (text) => {
     if (!window.speechSynthesis) return;
@@ -101,6 +148,7 @@ function RegisterForm() {
         email: form.email.trim(),
         phone: form.phone,
         role,
+        city: form.city || null,
         age: form.age ? parseInt(form.age) : null,
         gender: form.gender,
         blood_group: form.blood_group,
@@ -127,32 +175,6 @@ function RegisterForm() {
     }
     setLoading(false);
   };
-
-  const InputRow = ({ label, fieldKey, type = 'text', placeholder, required = false }) => (
-    <div>
-      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: '#1a1a2e', marginBottom: 5 }}>{label}{required && ' *'}</label>
-      <div style={{ position: 'relative' }}>
-        <input className="input-field" type={type} value={form[fieldKey]} onChange={e => set(fieldKey, e.target.value)} placeholder={placeholder} required={required} style={{ paddingRight: 40 }} />
-        <button type="button" onClick={() => startVoice(fieldKey, `Say your ${label}`)}
-          style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 26, height: 26, borderRadius: '50%', border: 'none', background: '#f5f5f5', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Mic size={12} color="#4a5568" />
-        </button>
-      </div>
-    </div>
-  );
-
-  const FileUpload = ({ label, file, setFile, accept = '.pdf,.jpg,.jpeg,.png', required = false }) => (
-    <div>
-      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: '#1a1a2e', marginBottom: 5 }}>{label}{required && ' *'}</label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: `2px dashed ${file ? '#10b981' : '#f0e8d8'}`, borderRadius: 10, cursor: 'pointer', background: file ? '#ecfdf5' : '#fafafa', transition: 'all 0.2s' }}>
-        <input type="file" accept={accept} hidden onChange={e => setFile(e.target.files[0])} required={required} />
-        {file ? <CheckCircle size={16} color="#10b981" /> : <Upload size={16} color="#9ca3af" />}
-        <span style={{ fontSize: '0.8rem', color: file ? '#065f46' : '#4a5568' }}>
-          {file ? file.name : `Upload ${label} (PDF/JPG/PNG)`}
-        </span>
-      </label>
-    </div>
-  );
 
   const totalSteps = role === 'doctor' ? 3 : 2;
 
@@ -224,9 +246,10 @@ function RegisterForm() {
             {step === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h3 style={{ fontFamily: 'Poppins', fontWeight: 700, color: '#1a1a2e', fontSize: '0.95rem', margin: 0 }}>Personal Information</h3>
-                <InputRow label="Full Name" fieldKey="name" placeholder={role === 'doctor' ? 'Dr. Full Name' : 'Your Full Name'} required />
-                <InputRow label="Email" fieldKey="email" type="email" placeholder="you@example.com" required />
-                <InputRow label="Phone Number" fieldKey="phone" type="tel" placeholder="+91 98765 43210" required />
+                <InputRow label="Full Name" fieldKey="name" placeholder={role === 'doctor' ? 'Dr. Full Name' : 'Your Full Name'} required value={form.name} onChange={handleInputChange('name')} onVoiceClick={handleVoiceClick('name', 'Full Name')} listening={listening} />
+                <InputRow label="Email" fieldKey="email" type="email" placeholder="you@example.com" required showVoice={false} value={form.email} onChange={handleInputChange('email')} listening={listening} />
+                <InputRow label="Phone Number" fieldKey="phone" type="tel" placeholder="+91 98765 43210" required value={form.phone} onChange={handleInputChange('phone')} onVoiceClick={handleVoiceClick('phone', 'Phone Number')} listening={listening} />
+                <InputRow label="City" fieldKey="city" placeholder="e.g. Mumbai, Delhi, Bangalore" required value={form.city} onChange={handleInputChange('city')} onVoiceClick={handleVoiceClick('city', 'City')} listening={listening} />
                 <div>
                   <label style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: '#1a1a2e', marginBottom: 5 }}>Password *</label>
                   <div style={{ position: 'relative' }}>
@@ -267,9 +290,9 @@ function RegisterForm() {
                     {SPECIALITIES.map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
-                <InputRow label="Medical License Number" fieldKey="license_number" placeholder="e.g. MH-12345" required />
-                <InputRow label="Years of Experience" fieldKey="years_experience" type="number" placeholder="e.g. 5" required />
-                <InputRow label="Clinic / Hospital Address" fieldKey="address" placeholder="Full address" />
+                <InputRow label="Medical License Number" fieldKey="license_number" placeholder="e.g. MH-12345" required value={form.license_number} onChange={handleInputChange('license_number')} onVoiceClick={handleVoiceClick('license_number', 'License Number')} listening={listening} />
+                <InputRow label="Years of Experience" fieldKey="years_experience" type="number" placeholder="e.g. 5" required value={form.years_experience} onChange={handleInputChange('years_experience')} showVoice={false} listening={listening} />
+                <InputRow label="Clinic / Hospital Address" fieldKey="address" placeholder="Full address" value={form.address} onChange={handleInputChange('address')} onVoiceClick={handleVoiceClick('address', 'Address')} listening={listening} />
               </div>
             )}
 
@@ -277,9 +300,9 @@ function RegisterForm() {
             {step === 2 && role === 'patient' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h3 style={{ fontFamily: 'Poppins', fontWeight: 700, color: '#1a1a2e', fontSize: '0.95rem', margin: 0 }}>Additional Info</h3>
-                <InputRow label="Age" fieldKey="age" type="number" placeholder="e.g. 32" />
-                <InputRow label="Address" fieldKey="address" placeholder="Your full address" />
-                <InputRow label="Emergency Contact" fieldKey="emergency_contact" type="tel" placeholder="+91 98765 43210" />
+                <InputRow label="Age" fieldKey="age" type="number" placeholder="e.g. 32" value={form.age} onChange={handleInputChange('age')} showVoice={false} listening={listening} />
+                <InputRow label="Address" fieldKey="address" placeholder="Your full address" value={form.address} onChange={handleInputChange('address')} onVoiceClick={handleVoiceClick('address', 'Address')} listening={listening} />
+                <InputRow label="Emergency Contact" fieldKey="emergency_contact" type="tel" placeholder="+91 98765 43210" value={form.emergency_contact} onChange={handleInputChange('emergency_contact')} onVoiceClick={handleVoiceClick('emergency_contact', 'Emergency Contact')} listening={listening} />
               </div>
             )}
 

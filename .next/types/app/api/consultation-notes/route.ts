@@ -1,4 +1,4 @@
-// File: C:\Users\Sujal\Downloads\swasthya-portal-v6\swasthya-v6\app\api\consultation-notes\route.js
+// File: C:\Users\Sujal\Documents\GitHub\swasthya_portal\app\api\consultation-notes\route.js
 import * as entry from '../../../../../app/api/consultation-notes/route.js'
 import type { NextRequest } from 'next/server.js'
 

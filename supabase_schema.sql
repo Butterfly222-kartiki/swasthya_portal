@@ -117,8 +117,16 @@ create table public.medical_documents (
   created_at timestamptz default now()
 );
 alter table public.medical_documents enable row level security;
-create policy "docs_all" on public.medical_documents for all using (auth.uid() = patient_id);
+create policy "docs_patient_all" on public.medical_documents for all using (auth.uid() = patient_id);
 create policy "docs_shared" on public.medical_documents for select using (auth.uid() = any(shared_with));
+-- Allow doctors to view records of patients who have had appointments with them
+create policy "docs_doctor_view" on public.medical_documents for select using (
+  exists (
+    select 1 from public.appointments
+    where appointments.patient_id = medical_documents.patient_id
+      and appointments.doctor_id = auth.uid()
+  )
+);
 
 -- ─── PRESCRIPTIONS ───────────────────────────────
 create table public.prescriptions (
@@ -234,6 +242,9 @@ alter publication supabase_realtime add table public.consultation_notes;
 -- ─── SCHEMA UPDATES v6 ───────────────────────────
 -- Add day_overrides column for per-day availability
 alter table public.profiles add column if not exists day_overrides text default '{}';
+
+-- Add video room name to appointments so doctor & patient join the SAME room
+alter table public.appointments add column if not exists video_room_name text;
 
 -- Update prescriptions table to have a unique constraint for consultation notes upsert
 -- (medicine, doctor_id, patient_id, duration) for video session notes

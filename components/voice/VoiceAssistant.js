@@ -100,15 +100,17 @@ export default function VoiceAssistant() {
     recognition.interimResults = true;
 
     recognition.onstart = () => setRecording(true);
+    let finalTranscript = '';
     recognition.onresult = (e) => {
       const interim = Array.from(e.results).map(r => r[0].transcript).join('');
+      finalTranscript = interim;
       setTranscript(interim);
     };
     recognition.onend = () => {
       setRecording(false);
-      const finalText = transcript || '';
-      if (finalText.trim()) processText(finalText.trim());
+      if (finalTranscript.trim()) processText(finalTranscript.trim());
       setTranscript('');
+      finalTranscript = '';
     };
     recognition.onerror = (e) => {
       setRecording(false);
@@ -217,8 +219,10 @@ export default function VoiceAssistant() {
 
     if (action.startsWith('NAVIGATE:')) {
       const path = action.replace('NAVIGATE:', '');
+      // path may already have leading slash (e.g. '/documents') or not (e.g. 'dashboard')
+      const route = path.startsWith('/') ? path : `/${path}`;
       setTimeout(() => {
-        router.push(`/${path}`);
+        router.push(route);
         setOpen(false);
       }, 1500);
     }

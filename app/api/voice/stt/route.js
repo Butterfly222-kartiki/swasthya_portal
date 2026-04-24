@@ -123,6 +123,11 @@ async function transcribeWithHuggingFace(audioBlob, language) {
   const MODEL = 'openai/whisper-large-v3';
 
   const arrayBuffer = await audioBlob.arrayBuffer();
+  const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+
+  // HF Inference API requires JSON body with inputs + parameters for multilingual
+  const hfLangMap = { en: 'english', hi: 'hindi', mr: 'marathi', ta: 'tamil', te: 'telugu', bn: 'bengali', gu: 'gujarati', kn: 'kannada', ml: 'malayalam', pa: 'punjabi', ur: 'urdu' };
+  const whisperLang = hfLangMap[language] || 'english';
 
   const res = await fetch(
     `https://api-inference.huggingface.co/models/${MODEL}`,
@@ -130,11 +135,17 @@ async function transcribeWithHuggingFace(audioBlob, language) {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.HF_API_KEY}`,
-        'Content-Type': 'audio/webm',
-        // Pass language as parameter
+        'Content-Type': 'application/json',
         'X-Wait-For-Model': 'true',
       },
-      body: arrayBuffer,
+      body: JSON.stringify({
+        inputs: base64Audio,
+        parameters: {
+          language: whisperLang,
+          task: 'transcribe',
+          return_timestamps: false,
+        },
+      }),
     }
   );
 

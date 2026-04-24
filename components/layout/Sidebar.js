@@ -258,9 +258,9 @@ export default function Sidebar({ user, profile }) {
         </div>
       )}
 
-      <style>{`
+      <style jsx>{`
         @media (max-width: 768px) {
-          aside[style*="position: fixed"][style*="width: 245px"] { display: none !important; }
+          aside[style*='position: fixed'][style*='width: 245px'] { display: none !important; }
           #hamburger-btn { display: flex !important; }
           .main-content { margin-left: 0 !important; }
         }

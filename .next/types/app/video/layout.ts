@@ -1,4 +1,4 @@
-// File: C:\Users\Sujal\Downloads\swasthya-portal-v6\swasthya-v6\app\video\layout.js
+// File: C:\Users\Sujal\Downloads\swasthya-portal-v6-fixed\swasthya-v6-fixed\app\video\layout.js
 import * as entry from '../../../../app/video/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

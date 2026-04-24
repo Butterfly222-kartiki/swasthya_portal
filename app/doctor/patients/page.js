@@ -19,6 +19,7 @@ export default function DoctorPatientsPage() {
   const [records, setRecords] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [consultNotes, setConsultNotes] = useState([]);
+  const [medicalDocs, setMedicalDocs] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
   // Prescription form
   const [rxForm, setRxForm] = useState({ medicine: '', dosage: '', frequency: 'Once daily', duration: '', notes: '' });
@@ -54,15 +55,17 @@ export default function DoctorPatientsPage() {
     setActivePatient(patient);
     setActiveTab('records');
     setDetailLoading(true);
-    // Load appointments (records), prescriptions, consultation notes
-    const [aptRes, rxRes, notesRes] = await Promise.all([
+    // Load appointments (records), prescriptions, consultation notes from correct tables
+    const [aptRes, rxRes, notesRes, docsRes] = await Promise.all([
       supabase.from('appointments').select('*').eq('patient_id', patient.id).eq('doctor_id', doctorId).order('appointment_date', { ascending: false }),
-      supabase.from('prescriptions').select('*').eq('patient_id', patient.id).eq('doctor_id', doctorId).neq('medicine', '__CONSULTATION_NOTES__').order('created_at', { ascending: false }),
-      supabase.from('prescriptions').select('*').eq('patient_id', patient.id).eq('doctor_id', doctorId).eq('medicine', '__CONSULTATION_NOTES__').order('dosage', { ascending: false }),
+      supabase.from('prescriptions').select('*').eq('patient_id', patient.id).eq('doctor_id', doctorId).order('created_at', { ascending: false }),
+      supabase.from('consultation_notes').select('*').eq('patient_id', patient.id).eq('doctor_id', doctorId).order('updated_at', { ascending: false }),
+      supabase.from('medical_documents').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false }),
     ]);
     setRecords(aptRes.data || []);
     setPrescriptions(rxRes.data || []);
     setConsultNotes(notesRes.data || []);
+    setMedicalDocs(docsRes.data || []);
     setDetailLoading(false);
   };
 
@@ -166,6 +169,7 @@ export default function DoctorPatientsPage() {
             {[
               { key: 'records', label: '📅 Appointments', icon: ClipboardList },
               { key: 'prescriptions', label: '💊 Prescriptions', icon: Pill },
+              { key: 'medical', label: '📁 Medical Records', icon: FileText },
               { key: 'notes', label: '📝 Consult Notes', icon: FileText },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -266,6 +270,50 @@ export default function DoctorPatientsPage() {
                   </div>
                 ))}
               </div>
+            ) : activeTab === 'medical' ? (
+              <div>
+                {medicalDocs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+                    <FileText size={32} style={{ margin: '0 auto 10px', opacity: 0.2 }} />
+                    <p style={{ fontSize: '0.82rem' }}>No medical records uploaded yet</p>
+                    <p style={{ fontSize: '0.72rem', marginTop: 4 }}>Patient can upload records from the Documents section</p>
+                  </div>
+                ) : medicalDocs.map(doc => {
+                  // Generate public URL if file_path exists but file_url doesn't
+                  let viewUrl = doc.file_url;
+                  if (!viewUrl && doc.file_path) {
+                    const { data } = supabase.storage.from('medical-records').getPublicUrl(doc.file_path);
+                    viewUrl = data?.publicUrl;
+                  }
+                  
+                  return (
+                    <div key={doc.id} style={{ padding: '12px 14px', background: 'white', borderRadius: 12, border: '1px solid #f0e8d8', marginBottom: 8, display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg,#0ea5e9,#0284c7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <FileText size={15} color="white" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a1a2e' }}>{doc.name}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#4a5568', marginTop: 2 }}>
+                          {doc.doc_type || 'Document'}{doc.file_size ? ` · ${(doc.file_size / 1024).toFixed(0)} KB` : ''}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: 2 }}>
+                          Uploaded: {new Date(doc.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      {viewUrl ? (
+                        <a href={viewUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ padding: '6px 12px', borderRadius: 8, background: '#eff6ff', color: '#1d4ed8', fontWeight: 600, fontSize: '0.72rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                          📄 View
+                        </a>
+                      ) : (
+                        <span style={{ padding: '6px 12px', borderRadius: 8, background: '#fef2f2', color: '#991b1b', fontWeight: 600, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                          ⚠️ No file
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               /* Consultation Notes */
               <div>
@@ -275,16 +323,43 @@ export default function DoctorPatientsPage() {
                     <p style={{ fontSize: '0.82rem' }}>No consultation notes yet</p>
                     <p style={{ fontSize: '0.72rem', marginTop: 4 }}>Notes taken during video calls appear here</p>
                   </div>
-                ) : consultNotes.map((n, i) => (
+                ) : consultNotes.map((n, i) => {
+                  const notesData = typeof n.notes === 'string' ? JSON.parse(n.notes) : n.notes;
+                  return (
                   <div key={n.id} style={{ background: 'white', border: '1px solid #f0e8d8', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1a1a2e' }}>Session {consultNotes.length - i}</div>
-                      <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{new Date(n.dosage).toLocaleString()}</div>
+                      <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{new Date(n.updated_at).toLocaleString()}</div>
                     </div>
-                    <pre style={{ fontSize: '0.78rem', color: '#4a5568', whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.6, margin: 0 }}>{n.notes}</pre>
-                    <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: 6 }}>Room: {n.duration}</div>
+                    {notesData?.chiefComplaint && (
+                      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f08000', marginBottom: 4 }}>
+                        📋 {notesData.chiefComplaint}
+                      </div>
+                    )}
+                    {notesData?.symptoms?.length > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: '#4a5568', marginBottom: 4 }}>
+                        <strong>Symptoms:</strong> {notesData.symptoms.join(', ')}
+                      </div>
+                    )}
+                    {notesData?.severity && (
+                      <div style={{ fontSize: '0.75rem', color: '#4a5568', marginBottom: 4 }}>
+                        <strong>Severity:</strong> {notesData.severity}{notesData?.duration && notesData.duration !== 'Not specified' ? ` · ${notesData.duration}` : ''}
+                      </div>
+                    )}
+                    {notesData?.suggestedDiagnosis && (
+                      <div style={{ fontSize: '0.75rem', color: '#065f46', marginBottom: 4 }}>
+                        <strong>Diagnosis (AI):</strong> {notesData.suggestedDiagnosis}
+                      </div>
+                    )}
+                    {notesData?.summary && (
+                      <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: 6, fontStyle: 'italic', lineHeight: 1.5 }}>{notesData.summary}</div>
+                    )}
+                    {notesData?.redFlags?.length > 0 && (
+                      <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: 4 }}>⚠️ {notesData.redFlags.join(', ')}</div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
