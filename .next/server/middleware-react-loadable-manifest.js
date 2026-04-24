@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"components\\\\voice\\\\VoiceAssistantWrapper.js -> ./VoiceAssistant\":{\"id\":\"components\\\\voice\\\\VoiceAssistantWrapper.js -> ./VoiceAssistant\",\"files\":[\"static/chunks/_app-pages-browser_components_voice_VoiceAssistant_js.js\"]}}"
